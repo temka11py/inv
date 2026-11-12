@@ -1,0 +1,876 @@
+/* =========================================================
+   Чамд зориулсан урилга — style.css
+
+   1. Tokens (paint, type, motion)
+   2. Canvas: base, texture, washes, grain
+   3. Scenes (the three "pages") and their transitions
+   4. Painted flower parts (shared by every illustration)
+   5. Handmade buttons
+   6. Page 1 — flower introduction
+   7. Page 2 — invitation card
+   8. The runaway "Үгүй" button
+   9. Page 3 — romantic ending
+  10. Drifting petals, sparkles, butterflies
+  11. Celebration particles
+  12. Reduced motion
+   ========================================================= */
+
+/* ---------- 1. Tokens ----------
+   Layout: three full-screen pages of one handmade letter, stacked on a
+   painted canvas; only one page shows at a time. */
+:root {
+  /* paint */
+  --canvas: #f4e8d8;      /* warm cream canvas */
+  --paper: #fcf6ec;       /* card paper */
+  --blush: #f5d5d3;       /* pastel pink */
+  --peach: #f2c9b0;
+  --rose: #cd8c95;        /* dusty rose */
+  --rose-deep: #9d5562;
+  --mauve: #c5a0b2;
+  --beige: #e6d2ba;
+  --ochre: #d9a85f;
+  --sage: #aeb08f;
+  --sage-deep: #7d8363;
+  --ink: #5f4237;         /* warm brown ink */
+  --pencil: #8c6e5e;      /* pencil line */
+
+  /* type — Caveat and Cormorant carry the Mongolian text (both include
+     ү / ө); Playfair is kept for the Latin lines only */
+  --font-hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+  --font-serif: "Cormorant Garamond", "Palatino Linotype", Georgia, serif;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+
+  /* motion */
+  --ease-soft: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.3, 1.5, .5, 1);
+
+  color-scheme: light;
+}
+
+/* ---------- 2. Canvas ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html {
+  height: 100%;
+  /* keep content clear of phone system bars */
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  line-height: 1.35;
+  /* canvas weave: two sets of faint threads */
+  background-color: var(--canvas);
+  background-image:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--ink) 5%, transparent) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 0 1px, transparent 1px 4px);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Zero-size holder for gradients and symbols (not display:none, so they stay usable) */
+.paintbox { position: absolute; }
+
+/* Soft watercolor washes bleeding in from the corners */
+.washes {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 42% at 8% 6%, color-mix(in srgb, var(--blush) 75%, transparent), transparent 70%),
+    radial-gradient(ellipse 48% 40% at 94% 92%, color-mix(in srgb, var(--blush) 65%, transparent), transparent 70%),
+    radial-gradient(ellipse 42% 32% at 92% 8%, color-mix(in srgb, var(--beige) 80%, transparent), transparent 72%),
+    radial-gradient(ellipse 46% 36% at 6% 94%, color-mix(in srgb, var(--peach) 45%, transparent), transparent 72%),
+    radial-gradient(ellipse 60% 50% at 50% 46%, color-mix(in srgb, var(--paper) 70%, transparent), transparent 75%);
+}
+
+/* Paper grain: an SVG noise tile tinted warm brown */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: .5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .37 0 0 0 0 .26 0 0 0 0 .21 0 0 0 .9 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Inline hand-drawn butterfly that sits in a line of text like a glyph */
+.fly {
+  display: inline-block;
+  width: .95em;
+  height: .95em;
+  vertical-align: -.1em;
+  rotate: 14deg;
+  overflow: visible;
+}
+
+/* wings closing and opening */
+@keyframes flap {
+  0%, 100% { transform: scaleX(1); }
+  50%      { transform: scaleX(.3); }
+}
+
+/* Paint tints for doodles and particles */
+.t-rose { color: var(--rose); }
+.t-blush { color: var(--blush); }
+.t-deep { color: var(--rose-deep); }
+.t-peach { color: var(--peach); }
+.t-mauve { color: var(--mauve); }
+.t-ochre { color: var(--ochre); }
+
+/* ---------- 3. Scenes ---------- */
+.stage {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;              /* children use margin:auto, so tall content can still scroll */
+  padding-block: clamp(20px, 5vh, 56px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--rose) 45%, transparent) transparent;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(18px) scale(.985);
+  transition:
+    opacity .8s ease,
+    transform .9s var(--ease-soft),
+    visibility 0s linear .9s;
+}
+
+.scene.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity .9s ease .3s,
+    transform 1s var(--ease-soft) .3s,
+    visibility 0s;
+}
+
+/* The page being put away drifts up instead of down */
+.scene.is-leaving { transform: translateY(-22px) scale(1.015); }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- 4. Painted flower parts ---------- */
+/* Pencil outline drawn loosely over the paint */
+.pencil {
+  fill: none;
+  stroke: var(--pencil);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .7;
+}
+.pencil--vein { stroke-width: .9; opacity: .35; }
+.stamen { fill: var(--ink); opacity: .6; }
+.bud { fill: var(--rose); opacity: .75; }
+
+/* Closed until an ancestor gets .bloom */
+.petal, .leaf, .flower-eye { transform: scale(0); opacity: 0; }
+
+.bloom .petal { animation: petal-open 1.15s cubic-bezier(.25, 1.25, .4, 1) var(--d, 0s) forwards; }
+.bloom .leaf { animation: petal-open .95s cubic-bezier(.25, 1.25, .4, 1) var(--d, 0s) forwards; }
+.bloom .flower-eye { animation: pop .8s var(--ease-spring) var(--d, 0s) forwards; }
+
+@keyframes petal-open {
+  0%   { transform: scale(0) rotate(-28deg); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes pop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Stems draw themselves from the ground up (pathLength="1" on the path) */
+.stem {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1.5;
+  stroke-dashoffset: 1.02;
+}
+.stem--paint { stroke: var(--sage); stroke-width: 5; opacity: .75; }
+.stem--pencil { stroke: var(--sage-deep); stroke-width: 1.1; opacity: .7; }
+.bloom .stem { animation: draw 1.6s ease-in-out var(--d, .9s) forwards; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* Sparkles inside illustrations */
+.twinkle {
+  color: var(--ochre);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  opacity: 0;
+}
+.bloom .twinkle { animation: twinkle 2.8s ease-in-out var(--d, 0s) infinite; }
+
+@keyframes twinkle {
+  0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+  50%      { transform: scale(1) rotate(45deg); opacity: .9; }
+}
+
+/* ---------- 5. Handmade buttons ---------- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  padding: .5em 1.2em .58em;
+  border: 2px solid var(--ink);
+  /* uneven corners, like a shape cut out by hand */
+  border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.75rem);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--ink) 22%, transparent);
+  transition: transform .25s var(--ease-spring), scale .45s var(--ease-spring), box-shadow .25s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* second, slightly-off pencil pass around the button */
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: -5px -4px -4px -6px;
+  border: 1px solid color-mix(in srgb, var(--pencil) 55%, transparent);
+  border-radius: 18px 225px 18px 255px / 255px 18px 225px 18px;
+  transform: rotate(-1deg);
+  pointer-events: none;
+}
+
+/* painted (primary) button */
+.btn--paint {
+  border-color: var(--rose-deep);
+  color: var(--paper);
+  background:
+    radial-gradient(120% 150% at 18% 10%, color-mix(in srgb, var(--rose) 70%, var(--rose-deep)), var(--rose-deep) 115%);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 35%, transparent);
+}
+
+.btn:not(.btn--no):hover {
+  transform: translateY(-2px) rotate(-1.5deg);
+  box-shadow: 3px 6px 0 color-mix(in srgb, var(--ink) 18%, transparent);
+}
+.btn:not(.btn--no):active { transform: translateY(1px) scale(.97); }
+
+.btn:focus-visible {
+  outline: 2px dashed var(--rose-deep);
+  outline-offset: 7px;
+}
+
+.btn__arrow { display: inline-block; transition: transform .3s var(--ease-spring); }
+.btn:hover .btn__arrow { transform: translateX(4px); }
+
+/* ---------- 6. Page 1 — flower introduction ---------- */
+.intro {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 2.4vh, 24px);
+  text-align: center;
+}
+
+.intro__flower {
+  width: min(70vw, 300px);
+  height: auto;
+  max-width: 100%;
+  max-height: 54vh;
+  overflow: visible;
+}
+
+/* the seed drops in first */
+.seed {
+  fill: var(--ink);
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+.bloom .seed { animation: seed-drop .8s var(--ease-spring) .15s forwards; }
+
+@keyframes seed-drop {
+  from { transform: translateY(-26px) scale(.4); opacity: 0; }
+  to   { transform: none; opacity: .85; }
+}
+
+.ground { opacity: .45; }
+
+/* once open, the whole plant sways from its root */
+.plant { transform-origin: 150px 386px; }
+.bloom .plant { animation: sway 7s ease-in-out 4.8s infinite; }
+
+@keyframes sway {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(1.6deg); }
+  75%      { transform: rotate(-1.6deg); }
+}
+
+.intro__msg {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.15rem, .9rem + 1.6vw, 1.7rem);
+  letter-spacing: .01em;
+  text-wrap: balance;
+  animation: rise-in 1.2s ease .5s both;
+}
+
+.intro .btn { animation: rise-in 1.2s ease 1.1s both; }
+
+/* ---------- 7. Page 2 — invitation card ---------- */
+.card {
+  position: relative;
+  margin: auto;
+  width: min(100%, 520px);
+  padding: clamp(16px, 3.4vh, 30px) clamp(18px, 5vw, 40px) clamp(22px, 4.6vh, 38px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(5px, 1.5vh, 14px);
+  text-align: center;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%, color-mix(in srgb, var(--blush) 45%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 100% 100%, color-mix(in srgb, var(--beige) 50%, transparent), transparent 70%),
+    var(--paper);
+  border-radius: 7px 12px 8px 14px / 12px 7px 14px 8px;
+  box-shadow:
+    0 2px 5px color-mix(in srgb, var(--ink) 14%, transparent),
+    0 22px 44px -20px color-mix(in srgb, var(--ink) 50%, transparent);
+  transform: rotate(-1.1deg);   /* set down slightly crooked */
+}
+
+/* pencilled border, drawn twice */
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1.4px solid color-mix(in srgb, var(--pencil) 50%, transparent);
+  border-radius: 30px 9px 26px 11px / 11px 28px 9px 24px;
+  pointer-events: none;
+}
+.card::after {
+  inset: 12px 8px 8px 12px;
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--rose) 45%, transparent);
+  border-radius: 10px 28px 12px 30px / 26px 10px 30px 9px;
+  transform: rotate(.35deg);
+}
+
+.scene--invite.is-active .card { animation: card-in 1.1s cubic-bezier(.2, .9, .3, 1.1) .35s both; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(44px) rotate(4deg) scale(.94); }
+  to   { opacity: 1; transform: rotate(-1.1deg); }
+}
+
+/* washi tape holding the card to the canvas */
+.tape {
+  position: absolute;
+  top: -11px;
+  width: 86px;
+  height: 26px;
+  background:
+    repeating-linear-gradient(45deg, color-mix(in srgb, var(--paper) 35%, transparent) 0 5px, transparent 5px 10px),
+    color-mix(in srgb, var(--rose) 50%, transparent);
+  clip-path: polygon(0 0, 4% 30%, 0 55%, 4% 80%, 0 100%, 100% 100%, 96% 72%, 100% 48%, 96% 22%, 100% 0);
+}
+.tape--left { left: -20px; transform: rotate(-36deg); }
+.tape--right { right: -20px; transform: rotate(34deg); }
+
+.doodle {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  overflow: visible;
+  animation: bob 5s ease-in-out infinite alternate;
+}
+.doodle--a { left: 9%; bottom: -34px; rotate: -16deg; }
+.doodle--b { right: 13%; bottom: -30px; width: 18px; height: 18px; animation-delay: -1.5s; }
+.doodle--c { right: -12px; top: 34%; width: 17px; height: 17px; rotate: 18deg; animation-delay: -3s; }
+.doodle--d { left: -13px; top: 60%; width: 19px; height: 19px; rotate: -40deg; animation-delay: -2.2s; }
+
+@keyframes bob {
+  from { transform: translateY(-3px); }
+  to   { transform: translateY(4px); }
+}
+
+.card__flower {
+  width: min(100%, 320px);
+  height: auto;
+  max-height: clamp(92px, 21vh, 150px);
+  overflow: visible;
+}
+
+.card__lead {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 1.2rem + 1.6vw, 2.05rem);
+  line-height: 1.1;
+  color: var(--rose-deep);
+  transform: rotate(-1.5deg);
+  text-wrap: balance;
+}
+
+.card__question {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.8rem, min(1.3rem + 3.2vw, 6.6vh), 2.9rem);
+  line-height: 1.08;
+  text-wrap: balance;
+  outline: none;
+}
+.card__question .fly { color: var(--rose-deep); }
+
+/* hand-drawn underline that draws itself */
+.squiggle {
+  width: min(62%, 220px);
+  height: auto;
+  overflow: visible;
+}
+.squiggle path {
+  fill: none;
+  stroke: var(--rose);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1.5;
+  stroke-dashoffset: 1.02;
+}
+.scene--invite.is-active .squiggle path { animation: draw 1s ease-out 1.7s forwards; }
+
+.card__note {
+  margin: 0;
+  max-width: 27ch;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.12rem, 1rem + .7vw, 1.35rem);
+  color: var(--pencil);
+  text-wrap: balance;
+}
+
+.choices {
+  margin-top: clamp(8px, 1.6vh, 16px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(16px, 4vw, 28px);
+}
+
+/* the yes button grows a touch every time "Үгүй" escapes (set from script.js) */
+.btn--yes { scale: var(--grow, 1); }
+.btn--yes .fly { animation: flap 1.6s ease-in-out infinite; }
+
+/* ---------- 8. The runaway "Үгүй" button ---------- */
+.no-slot { display: inline-flex; }
+
+.btn--no { font-weight: 500; }
+
+/* once loose it lives at the top level and is steered with --x / --y / --r */
+.btn--no.is-loose {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 30;
+  margin: 0;
+  transform: translate(var(--x, 0px), var(--y, 0px)) rotate(var(--r, 0deg));
+  /* no overshoot here, so it can never slide past the screen edge */
+  transition: transform .32s cubic-bezier(.2, .9, .3, 1), opacity .4s ease;
+}
+
+.btn--no.is-gone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn__hop { display: inline-block; }
+.btn__hop.is-hopping { animation: hop .45s ease-out; }
+
+@keyframes hop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.2, .8); }
+  60%  { transform: scale(.9, 1.14) rotate(-4deg); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- 9. Page 3 — romantic ending ---------- */
+.garden {
+  position: fixed;   /* the bouquets stay in the screen corners if the page scrolls */
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.garden__corner {
+  position: absolute;
+  width: clamp(104px, 28vmin, 270px);
+  height: auto;
+  overflow: visible;
+}
+.garden__corner--tl { top: -1%; left: -1%; }
+.garden__corner--tr { top: -1%; right: -1%; transform: scaleX(-1); }
+.garden__corner--bl { bottom: -1%; left: -1%; transform: scaleY(-1); }
+.garden__corner--br { bottom: -1%; right: -1%; transform: scale(-1, -1); }
+
+.final {
+  position: relative;
+  z-index: 2;
+  margin: auto;
+  max-width: 32rem;
+  padding-block: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2.6vh, 24px);
+  text-align: center;
+}
+
+/* two groups: the words, then the plan note with the signature */
+.final__words,
+.final__side {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.5vh, 14px);
+}
+
+@media (max-aspect-ratio: 4/5) {
+  /* on tall, narrow screens keep the text clear of the corner bouquets */
+  .final { padding-block: clamp(72px, 12vh, 150px); }
+}
+
+@media (min-width: 860px) and (max-height: 800px) {
+  /* wide but short screens: words on the left, the plan note beside them */
+  .final {
+    flex-direction: row;
+    max-width: 54rem;
+    gap: clamp(28px, 4vw, 56px);
+  }
+  .final__words { flex: 1 1 0; }
+  .final__side { flex: 0 1 23rem; }
+}
+
+/* the lines arrive one after another */
+.scene--final.is-active .final__words > *,
+.scene--final.is-active .final__side > * {
+  animation: rise-in 1s ease both;
+  animation-delay: calc(.5s + var(--i, 0) * .5s);
+}
+.final__words > :nth-child(2) { --i: 1; }
+.final__words > :nth-child(3) { --i: 2; }
+.final__words > :nth-child(4) { --i: 3; }
+.final__words > :nth-child(5) { --i: 4; }
+.final__side > :nth-child(1) { --i: 5; }
+.final__side > :nth-child(2) { --i: 6.4; }
+
+.final__yay {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(2.8rem, min(2rem + 7vw, 13vh), 6rem);
+  line-height: 1;
+  color: var(--rose-deep);
+  outline: none;
+}
+.final__yay .fly { width: .62em; height: .62em; vertical-align: .1em; }
+
+.final__line {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* hand-drawn "forwarded" arrow in front of the line */
+.fwd {
+  display: inline-block;
+  width: .8em;
+  height: .8em;
+  vertical-align: -.04em;
+  overflow: visible;
+  fill: none;
+  stroke: var(--pencil);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.final__rule {
+  width: min(52%, 180px);
+  height: auto;
+  color: var(--rose);
+  overflow: visible;
+}
+
+.final__big {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.6rem, 1.2rem + 2.2vw, 2.5rem);
+  line-height: 1.12;
+  text-wrap: balance;
+}
+.final__big .fly { color: var(--rose-deep); }
+
+.final__soon {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1rem + 1vw, 1.6rem);
+  color: var(--pencil);
+}
+
+/* The plan: when and where, on a small taped paper note */
+.tape--mid {
+  left: 50%;
+  top: -14px;
+  width: 74px;
+  height: 22px;
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.plan {
+  position: relative;
+  margin-top: 8px;   /* room for the tape */
+  width: min(100%, 23rem);
+  padding: clamp(16px, 2.6vh, 22px) clamp(16px, 4vw, 24px) clamp(10px, 2vh, 16px);
+  background:
+    radial-gradient(ellipse 70% 60% at 100% 0%, color-mix(in srgb, var(--blush) 45%, transparent), transparent 70%),
+    var(--paper);
+  border-radius: 5px 10px 6px 12px / 10px 5px 12px 6px;
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--ink) 14%, transparent),
+    0 14px 26px -16px color-mix(in srgb, var(--ink) 50%, transparent);
+  rotate: 1.2deg;
+}
+
+/* pencilled dashed frame */
+.plan::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1.2px dashed color-mix(in srgb, var(--pencil) 45%, transparent);
+  border-radius: 14px 6px 12px 7px / 7px 13px 6px 12px;
+  pointer-events: none;
+}
+
+/* label column fits the longest label; values take the rest */
+.plan__list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  gap: clamp(2px, .8vh, 6px) 12px;
+  text-align: left;
+}
+
+.plan__list dt {
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: clamp(1.25rem, 1.1rem + .6vw, 1.5rem);
+  line-height: 1.1;
+  color: var(--rose-deep);
+}
+
+.plan__list dd {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.1rem, 1rem + .6vw, 1.35rem);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.plan__note {
+  margin: clamp(6px, 1.2vh, 10px) 0 0;
+  padding-top: clamp(5px, 1vh, 8px);
+  border-top: 1px dashed color-mix(in srgb, var(--rose) 55%, transparent);
+  font-family: var(--font-hand);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1.05rem + .7vw, 1.5rem);
+  line-height: 1.15;
+  color: var(--pencil);
+  text-wrap: balance;
+}
+
+.plan__brush {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -.2em;
+  overflow: visible;
+}
+.plan__brush-handle { fill: none; stroke: var(--pencil); stroke-width: 3; stroke-linecap: round; }
+.plan__brush-ferrule { fill: none; stroke: var(--ochre); stroke-width: 4.5; stroke-linecap: round; }
+.plan__brush-tip { fill: var(--rose); stroke: var(--rose-deep); stroke-width: 1; stroke-linejoin: round; }
+
+.final__sign {
+  margin: .5em 6% 0 0;
+  align-self: flex-end;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.2rem);
+  color: var(--rose-deep);
+  rotate: -5deg;
+}
+
+/* ---------- 10. Drifting petals, sparkles, butterflies ---------- */
+.drift {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.drift svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* falling petal: outer element falls, inner svg sways */
+.drift__petal {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  opacity: 0;
+  animation: fall var(--dur) linear var(--delay) infinite;
+}
+.drift__petal svg { animation: flutter var(--flutter) ease-in-out infinite alternate; }
+
+@keyframes fall {
+  0%   { transform: translate3d(0, -10vh, 0); opacity: 0; }
+  8%   { opacity: var(--o); }
+  88%  { opacity: var(--o); }
+  100% { transform: translate3d(var(--wind), 110vh, 0); opacity: 0; }
+}
+@keyframes flutter {
+  from { transform: translateX(-14px) rotate(-40deg); }
+  to   { transform: translateX(14px) rotate(55deg); }
+}
+
+.drift__sparkle {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  color: var(--ochre);
+  opacity: 0;
+  animation: twinkle var(--dur) ease-in-out var(--delay) infinite;
+}
+
+/* butterflies that flutter up on the last page */
+.drift__fly {
+  position: absolute;
+  bottom: 0;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  opacity: 0;
+  animation: float-up var(--dur) ease-in-out var(--delay) infinite;
+}
+.drift__fly svg {
+  rotate: var(--tilt);
+  animation: flap var(--flutter) ease-in-out infinite;
+}
+
+@keyframes float-up {
+  0%   { transform: translate3d(0, 10vh, 0) scale(.6); opacity: 0; }
+  12%  { opacity: var(--o); }
+  80%  { opacity: var(--o); }
+  100% { transform: translate3d(var(--wind), -108vh, 0) scale(1.1); opacity: 0; }
+}
+
+/* ---------- 11. Celebration particles ---------- */
+.fx {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* outer element travels sideways, inner one goes up and then falls */
+.fx__p {
+  position: absolute;
+  left: var(--x0);
+  top: var(--y0);
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  animation: fx-x var(--dur) cubic-bezier(.2, .6, .35, 1) var(--delay) both;
+}
+.fx__p > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: fx-y var(--dur) linear var(--delay) both;
+}
+/* torn paper confetti */
+.fx__p > .fx__bit {
+  height: 52%;
+  background: currentColor;
+  border-radius: 2px 7px 3px 8px / 6px 2px 7px 3px;
+}
+
+@keyframes fx-x { to { transform: translateX(var(--dx)); } }
+@keyframes fx-y {
+  0%   { transform: translateY(0) rotate(0deg) scale(.3); opacity: 0; animation-timing-function: cubic-bezier(.2, .7, .4, 1); }
+  10%  { opacity: 1; }
+  35%  { transform: translateY(var(--up)) rotate(calc(var(--rot) * .4)) scale(1); animation-timing-function: cubic-bezier(.5, 0, .9, .6); }
+  85%  { opacity: 1; }
+  100% { transform: translateY(var(--down)) rotate(var(--rot)) scale(.9); opacity: 0; }
+}
+
+/* ---------- 12. Reduced motion ----------
+   Everything jumps straight to its finished state; ambient drifting stops. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+  }
+  .drift, .fx { display: none; }
+  .twinkle { transform: none; opacity: .8; }
+}

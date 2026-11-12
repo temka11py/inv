@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Чамд зориулсан урилга</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Playfair+Display:ital,wght@1,400;1,500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- =========================================================
+     Shared paint box: watercolor gradients and little hand-drawn
+     symbols (butterfly, sparkle, petal, tiny bloom) reused everywhere.
+     ========================================================= -->
+<svg class="paintbox" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Petal washes: pale at the base, pigment pooling toward the tip -->
+    <radialGradient id="wc-rose" cx=".5" cy="1" r="1.05">
+      <stop offset="0" style="stop-color:var(--blush);stop-opacity:.5"/>
+      <stop offset=".6" style="stop-color:var(--rose);stop-opacity:.7"/>
+      <stop offset="1" style="stop-color:var(--rose-deep);stop-opacity:.78"/>
+    </radialGradient>
+    <radialGradient id="wc-blush" cx=".5" cy="1" r="1.05">
+      <stop offset="0" style="stop-color:var(--paper);stop-opacity:.6"/>
+      <stop offset=".6" style="stop-color:var(--blush);stop-opacity:.8"/>
+      <stop offset="1" style="stop-color:var(--rose);stop-opacity:.7"/>
+    </radialGradient>
+    <radialGradient id="wc-peach" cx=".5" cy="1" r="1.05">
+      <stop offset="0" style="stop-color:var(--paper);stop-opacity:.55"/>
+      <stop offset=".6" style="stop-color:var(--peach);stop-opacity:.8"/>
+      <stop offset="1" style="stop-color:var(--rose);stop-opacity:.75"/>
+    </radialGradient>
+    <radialGradient id="wc-mauve" cx=".5" cy="1" r="1.05">
+      <stop offset="0" style="stop-color:var(--blush);stop-opacity:.5"/>
+      <stop offset=".6" style="stop-color:var(--mauve);stop-opacity:.75"/>
+      <stop offset="1" style="stop-color:var(--rose-deep);stop-opacity:.7"/>
+    </radialGradient>
+    <radialGradient id="wc-sage" cx=".5" cy="1" r="1.05">
+      <stop offset="0" style="stop-color:var(--sage);stop-opacity:.45"/>
+      <stop offset=".7" style="stop-color:var(--sage);stop-opacity:.8"/>
+      <stop offset="1" style="stop-color:var(--sage-deep);stop-opacity:.8"/>
+    </radialGradient>
+    <radialGradient id="wc-ochre" cx=".42" cy=".38" r=".7">
+      <stop offset="0" style="stop-color:var(--peach);stop-opacity:.95"/>
+      <stop offset=".6" style="stop-color:var(--ochre);stop-opacity:.95"/>
+      <stop offset="1" style="stop-color:var(--pencil);stop-opacity:.85"/>
+    </radialGradient>
+
+    <!-- Butterfly: washed wings with a pencil outline, ink body -->
+    <symbol id="i-butterfly" viewBox="0 0 24 24">
+      <g fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round">
+        <path fill-opacity=".6" d="M12 11.5C10.5 6.5 6.5 3.2 3.2 4.2 1.6 8.2 4.5 12.4 12 12.5Z"/>
+        <path fill-opacity=".6" d="M12 11.5C13.5 6.5 17.5 3.2 20.8 4.2 22.4 8.2 19.5 12.4 12 12.5Z"/>
+        <path fill-opacity=".38" d="M12 12.5C8.5 12.2 5.2 14 5.8 17.6 8.4 20 11.2 17.2 12 13.5Z"/>
+        <path fill-opacity=".38" d="M12 12.5C15.5 12.2 18.8 14 18.2 17.6 15.6 20 12.8 17.2 12 13.5Z"/>
+      </g>
+      <g fill="none" stroke-linecap="round" style="stroke:var(--ink)">
+        <path stroke-width="1.5" d="M12 9.2V17.4"/>
+        <path stroke-width=".8" d="M12 9.2C11.6 7.2 10.6 5.8 9.4 5.2M12 9.2C12.4 7.2 13.4 5.8 14.6 5.2"/>
+      </g>
+    </symbol>
+    <!-- Four-point sparkle -->
+    <symbol id="i-star" viewBox="0 0 24 24">
+      <path d="M12 1C12.6 7.6 16.4 11.4 23 12 16.4 12.6 12.6 16.4 12 23 11.4 16.4 7.6 12.6 1 12 7.6 11.4 11.4 7.6 12 1Z" fill="currentColor"/>
+    </symbol>
+    <!-- Loose petal -->
+    <symbol id="i-petal" viewBox="0 0 24 24">
+      <path d="M12 2C18.5 7 19.5 15 12 22 4.5 15 5.5 7 12 2Z" fill="currentColor" fill-opacity=".8"/>
+      <path d="M12 6.5C12.6 11 12.4 15 12 19" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-width=".8" stroke-linecap="round"/>
+    </symbol>
+    <!-- Tiny five-petal bloom -->
+    <symbol id="i-bloom" viewBox="0 0 24 24">
+      <g fill="currentColor" fill-opacity=".8">
+        <ellipse cx="12" cy="6.2" rx="3.6" ry="5"/>
+        <ellipse cx="12" cy="6.2" rx="3.6" ry="5" transform="rotate(72 12 12)"/>
+        <ellipse cx="12" cy="6.2" rx="3.6" ry="5" transform="rotate(144 12 12)"/>
+        <ellipse cx="12" cy="6.2" rx="3.6" ry="5" transform="rotate(216 12 12)"/>
+        <ellipse cx="12" cy="6.2" rx="3.6" ry="5" transform="rotate(288 12 12)"/>
+      </g>
+      <circle cx="12" cy="12" r="2.7" style="fill:var(--ochre)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- Canvas background: soft watercolor washes + drifting petals and sparkles -->
+<div class="washes" aria-hidden="true"></div>
+<div class="drift" id="drift" aria-hidden="true"></div>
+
+<main class="stage" id="stage">
+
+  <!-- ============ 1. Flower introduction ============ -->
+  <section class="scene scene--intro is-active" id="scene-intro" aria-labelledby="intro-msg">
+    <div class="intro">
+      <!-- The flower (seed, stem, leaves, petals) is painted by script.js -->
+      <svg class="intro__flower" id="intro-flower" viewBox="0 0 300 400" role="img" aria-label="Үрээс ургаж дэлгэрч буй цэцэг"></svg>
+      <p class="intro__msg" id="intro-msg">Something special is waiting for you...</p>
+      <button class="btn btn--paint" id="btn-continue" type="button">
+        Үргэлжлүүлэх <span class="btn__arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ 2. Invitation card ============ -->
+  <section class="scene scene--invite" id="scene-invite" aria-labelledby="question" aria-hidden="true" inert>
+    <article class="card">
+      <span class="tape tape--left" aria-hidden="true"></span>
+      <span class="tape tape--right" aria-hidden="true"></span>
+
+      <!-- Little doodles pinned around the card -->
+      <svg class="doodle doodle--a t-rose" aria-hidden="true"><use href="#i-butterfly"/></svg>
+      <svg class="doodle doodle--b t-ochre" aria-hidden="true"><use href="#i-star"/></svg>
+      <svg class="doodle doodle--c t-deep" aria-hidden="true"><use href="#i-bloom"/></svg>
+      <svg class="doodle doodle--d t-mauve" aria-hidden="true"><use href="#i-petal"/></svg>
+
+      <!-- Large bouquet illustration, painted by script.js -->
+      <svg class="card__flower" id="card-flower" viewBox="0 0 320 150" data-bloom role="img" aria-label="Гараар зурсан цэцгийн баглаа"></svg>
+
+      <p class="card__lead">Надад чамд нэг асуулт байна...</p>
+      <h1 class="card__question" id="question" tabindex="-1">
+        Надтай болзоонд явах уу?
+        <svg class="fly" aria-hidden="true"><use href="#i-butterfly"/></svg>
+      </h1>
+      <svg class="squiggle" viewBox="0 0 220 14" aria-hidden="true">
+        <path pathLength="1" d="M4 8C30 2 44 13 70 7S112 2 138 8 186 12 216 5"/>
+      </svg>
+      <p class="card__note">Чамтай хамт нэгэн гоё дурсамж бүтээмээр байна.</p>
+
+      <div class="choices">
+        <button class="btn btn--paint btn--yes" id="btn-yes" type="button">
+          Тэгье! <svg class="fly" aria-hidden="true"><use href="#i-butterfly"/></svg>
+        </button>
+        <!-- The slot keeps the row steady once the button runs away -->
+        <span class="no-slot" id="no-slot">
+          <button class="btn btn--no" id="btn-no" type="button" tabindex="-1">
+            <span class="btn__hop">Үгүй 🥺</span>
+          </button>
+        </span>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ 3. Romantic ending ============ -->
+  <section class="scene scene--final" id="scene-final" aria-labelledby="yay" aria-hidden="true" inert>
+    <!-- Corner bouquets, painted by script.js -->
+    <div class="garden" id="garden" aria-hidden="true"></div>
+
+    <div class="final">
+      <!-- The words -->
+      <div class="final__words">
+        <h2 class="final__yay" id="yay" tabindex="-1">
+          Yay! <svg class="fly" aria-hidden="true"><use href="#i-butterfly"/></svg>
+        </h2>
+        <!-- written like the "forwarded" label of a chat app -->
+        <p class="final__line">
+          <svg class="fwd" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20C4 13 9 9.5 19 9.5M14 4l5.5 5.5L14 15"/>
+          </svg>
+          Forwarded invitation 😏
+        </p>
+        <svg class="final__rule" viewBox="0 0 180 20" aria-hidden="true">
+          <path class="pencil" d="M6 11C30 6 52 14 76 10"/>
+          <use href="#i-bloom" x="82" y="2" width="16" height="16"/>
+          <path class="pencil" d="M104 10C128 14 150 6 174 11"/>
+        </svg>
+        <p class="final__big">
+          Чи миний өдрийг гоё болгочихлоо.
+          <svg class="fly" aria-hidden="true"><use href="#i-butterfly"/></svg>
+        </p>
+        <p class="final__soon">Удахгүй уулзацгаая!</p>
+      </div>
+
+      <!-- The plan: when and where, on a little paper note taped to the canvas -->
+      <div class="final__side">
+        <aside class="plan" aria-label="Болзооны мэдээлэл">
+          <span class="tape tape--mid" aria-hidden="true"></span>
+          <dl class="plan__list">
+            <dt>Хэзээ</dt>
+            <dd>11 сарын 15, бүтэн сайн өдөр</dd>
+            <dt>Цаг</dt>
+            <dd>14:00 цагаас</dd>
+            <dt>Хаана</dt>
+            <dd>Olympic Galleria, 2 давхарт</dd>
+          </dl>
+          <p class="plan__note">
+            <!-- hand-drawn paintbrush -->
+            <svg class="plan__brush" viewBox="0 0 40 40" aria-hidden="true">
+              <path class="plan__brush-handle" d="M5 35 22 18"/>
+              <path class="plan__brush-ferrule" d="M22 18l5-5"/>
+              <path class="plan__brush-tip" d="M25 11C28 6 34 4 37 3 36 8 33 14 29 15Z"/>
+            </svg>
+            Канвас зурдаг кафе — хамтдаа зурцгаая!
+          </p>
+        </aside>
+        <p class="final__sign">Can't wait!<svg class="fly" aria-hidden="true"><use href="#i-butterfly"/></svg></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- The "Үгүй" button moves here (top level) once it starts running away -->
+<div id="runaway"></div>
+<!-- Celebration particles -->
+<div class="fx" id="fx" aria-hidden="true"></div>
+<!-- Paper grain laid over everything, so the paint looks soaked into the canvas -->
+<div class="grain" aria-hidden="true"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
